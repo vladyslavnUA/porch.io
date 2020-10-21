@@ -2,7 +2,15 @@ $(document).ready(()=>{
     const socket = io.connect();
     let currentUser;
     socket.emit('get online users');
+    //Each user should be in the general channel by default.
+    socket.emit('user changed channel', "General");
   
+    //Users can change the channel by clicking on its name.
+    $(document).on('click', '.channel', (e)=>{
+        let newChannel = e.target.textContent;
+        socket.emit('user changed channel', newChannel);
+    });
+
     $('#create-user-btn').click((e)=>{
       e.preventDefault();
       if($('#username-input').val().length > 0){
@@ -89,6 +97,12 @@ $(document).ready(()=>{
     // Make the channel joined the current channel. Then load the messages.
     // This only fires for the client who made the channel.
     socket.on('user changed channel', (data) => {
+        socket.join(newChannel);
+        socket.emit('user changed channel', {
+            channel : newChannel,
+            messages : channels[newChannel]
+        });
+        
         $('.channel-current').addClass('channel');
         $('.channel-current').removeClass('channel-current');
         $(`.channel:contains('${data.channel}')`).addClass('channel-current');
